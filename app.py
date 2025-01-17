@@ -5,11 +5,6 @@ import json
 import streamlit as st
 
 def processar_extrato_investimentos(input_file):
-    base_dir = os.path.dirname(os.path.abspath(input_file))
-    output_folder = os.path.join(base_dir, "extrato_tratado")
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-
     with open(input_file, "r", encoding="latin-1") as file:
         lines = file.readlines()
 
@@ -54,7 +49,7 @@ def processar_extrato_investimentos(input_file):
                 data_dia_a_dia["Saldo Cotas"].append(match.group(6) if match.group(6) else "0")
 
     df_dia_a_dia = pd.DataFrame(data_dia_a_dia)
-    output_excel_path = os.path.join(output_folder, "extrato_investimentos_tratado.xlsx")
+    output_excel_path = "extrato_investimentos_tratado.xlsx"
     with pd.ExcelWriter(output_excel_path) as writer:
         for fund in df_dia_a_dia["Fundo"].unique():
             df_fund = df_dia_a_dia[df_dia_a_dia["Fundo"] == fund]
@@ -64,11 +59,6 @@ def processar_extrato_investimentos(input_file):
     return output_excel_path
 
 def processar_extrato_conta_corrente(input_file):
-    base_dir = os.path.dirname(os.path.abspath(input_file))
-    output_folder = os.path.join(base_dir, "extrato_tratado")
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-
     df = pd.read_excel(input_file, engine="openpyxl", header=2)
     df = df.dropna(how="all").reset_index(drop=True)
     df["Data balancete"] = pd.to_datetime(df["Data balancete"], dayfirst=True, errors='coerce')
@@ -88,7 +78,7 @@ def processar_extrato_conta_corrente(input_file):
 
     df["Cod. Historico"] = df["Cod. Historico"].astype(str).str.replace("\.0$", "", regex=True).str.strip()
     df = df[~df["Cod. Historico"].isin(["nan", "NaN", "None", "000", "999", "999.0"])]
-    output_excel_path = os.path.join(output_folder, "extrato_conta_corrente_tratado.xlsx")
+    output_excel_path = "extrato_conta_corrente_tratado.xlsx"
     df.to_excel(output_excel_path, index=False)
     return output_excel_path
 
@@ -102,11 +92,11 @@ if st.button("Iniciar Conversão"):
         with open(temp_path, "wb") as f:
             f.write(input_file_investimentos.getbuffer())
         excel_path = processar_extrato_investimentos(temp_path)
-        st.success(f"Processamento concluído! Arquivo salvo em: {excel_path}")
+        st.download_button(label="Baixar Extrato de Investimentos", data=open(excel_path, "rb"), file_name="extrato_investimentos_tratado.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     if input_file_conta_corrente:
         temp_path = f"temp_{input_file_conta_corrente.name}"
         with open(temp_path, "wb") as f:
             f.write(input_file_conta_corrente.getbuffer())
         excel_path = processar_extrato_conta_corrente(temp_path)
-        st.success(f"Processamento concluído! Arquivo salvo em: {excel_path}")
+        st.download_button(label="Baixar Extrato da Conta Corrente", data=open(excel_path, "rb"), file_name="extrato_conta_corrente_tratado.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
