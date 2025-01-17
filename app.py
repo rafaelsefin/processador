@@ -87,16 +87,21 @@ input_file_investimentos = st.file_uploader("Faça o upload do extrato de invest
 input_file_conta_corrente = st.file_uploader("Faça o upload do extrato da conta corrente (XLSX)", type=["xlsx"], key="conta_corrente")
 
 if st.button("Iniciar Conversão"):
+    download_buttons = {}
+    
     if input_file_investimentos:
         temp_path = f"temp_{input_file_investimentos.name}"
         with open(temp_path, "wb") as f:
             f.write(input_file_investimentos.getbuffer())
         excel_path = processar_extrato_investimentos(temp_path)
-        st.download_button(label="Baixar Extrato de Investimentos", data=open(excel_path, "rb"), file_name="extrato_investimentos_tratado.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        download_buttons["investimentos"] = st.download_button(label="Baixar Extrato de Investimentos", data=open(excel_path, "rb"), file_name="extrato_investimentos_tratado.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     if input_file_conta_corrente:
         temp_path = f"temp_{input_file_conta_corrente.name}"
         with open(temp_path, "wb") as f:
             f.write(input_file_conta_corrente.getbuffer())
         excel_path = processar_extrato_conta_corrente(temp_path)
-        st.download_button(label="Baixar Extrato da Conta Corrente", data=open(excel_path, "rb"), file_name="extrato_conta_corrente_tratado.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        download_buttons["conta_corrente"] = st.download_button(label="Baixar Extrato da Conta Corrente", data=open(excel_path, "rb"), file_name="extrato_conta_corrente_tratado.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    
+    for key, button in download_buttons.items():
+        button
